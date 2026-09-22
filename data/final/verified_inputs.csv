@@ -1,0 +1,9 @@
+bank,basis,quarter,interest_income,interest_expended,nii_reported,pat,avg_deposits,avg_advances,nim_pct,gnpa_pct,credit_cost_pct,source_page_note
+Axis Bank,standalone,Q1 FY26,31064,17504,13560,5806,,,,,,"AXISBANK_Q1FY27_deck.pdf p.62 (Financial Performance table, Q1FY26 column)"
+Axis Bank,standalone,Q1 FY27,33986,19340,14646,7114,,,3.46,,,"AXISBANK_Q1FY27_deck.pdf p.5 (NIM, text) and p.62 (Financial Performance table)"
+HDFC Bank,standalone,Q1 FY26,,,,18200,26576,27423,3.35,1.40,,"HDFCBANK_Q1FY26_deck.pdf p.3; PAT in bn converted to Cr (x100)"
+HDFC Bank,standalone,Q1 FY27,,,,19100,30115,30386,3.26,1.17,,"HDFCBANK_Q1FY27_deck.pdf p.3; PAT in bn converted to Cr (x100)"
+ICICI Bank,consolidated,Q1 FY26,49079.96,23090.06,25989.90,13557.60,,,,,,"ICICI_Q1FY27_deck.pdf p.9 (results table, Q1-2026 column)"
+ICICI Bank,consolidated,Q1 FY27,52240.85,23063.72,29177.13,15440.06,,,,,,"ICICI_Q1FY27_deck.pdf p.9 (results table, Q1-2027 column)"
+Kotak Mahindra Bank,standalone,Q1 FY26,,,,3282,,444823,4.65,0.34,0.93,"KOTAKBANK_Q1FY27_deck.pdf p.6 (Bank Highlights, Q1FY26 column) and p.8 (balance sheet, Net Advances Jun-25)"
+Kotak Mahindra Bank,standalone,Q1 FY27,,,,4123,,512249,4.53,0.27,0.46,"KOTAKBANK_Q1FY27_deck.pdf p.6 (Bank Highlights, Q1FY27 column) and p.8 (balance sheet, Net Advances Jun-26)"

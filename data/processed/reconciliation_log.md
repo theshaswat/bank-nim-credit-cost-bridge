@@ -40,4 +40,13 @@ Net interest income + other income − operating expenses − provisions − tax
 
 *Tolerances are derived from each bank's own reporting precision, not chosen. A figure printed to the nearest unit u carries up to u/2 of rounding, and this walk sums five of them, so the tolerance is 5·u/2. HDFC's is the widest because it publishes in ₹ billion to one decimal (u = ₹10 Cr); ICICI's is the tightest because it publishes ₹ Crore to two decimals (u = ₹0.01 Cr).*
 
+## 4. Attribution closes on the change in profit
+
+The five contributions must sum back to the YoY change in reported profit. The residual is bounded by twice the walk tolerance, because the change is a difference of two quarters that are each a five-line walk. A residual larger than the banks' own rounding can produce is an extraction error, not rounding, and fails here.
+
+- **Kotak Mahindra Bank**: PASS — contributions sum to +841.00 vs reported ΔPAT +841.00 (residual +0.00 Cr, bound ±5.00 Cr)
+- **Axis Bank**: PASS — contributions sum to +1,307.00 vs reported ΔPAT +1,308.00 (residual +1.00 Cr, bound ±5.00 Cr)
+- **ICICI Bank**: PASS — contributions sum to +2,036.29 vs reported ΔPAT +2,036.29 (residual +0.00 Cr, bound ±0.05 Cr)
+- **HDFC Bank**: PASS — contributions sum to +880.00 vs reported ΔPAT +900.00 (residual +20.00 Cr, bound ±50.00 Cr)
+
 **Overall: all checks passed**

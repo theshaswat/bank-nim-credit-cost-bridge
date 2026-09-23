@@ -243,12 +243,23 @@ def reconcile(df: pd.DataFrame, stated: pd.DataFrame) -> tuple[list[str], bool, 
     l2, ok2, r2 = check_stated_growth(df, stated)
     l3, ok3, r3 = check_pnl_walk(df)
     ok = ok1 and ok2 and ok3
-    lines = header + l1 + l2 + l3 + [
-        f"**Overall: {'all checks passed' if ok else 'CHECKS FAILED — see above'}**"
-    ]
-    RECON_LOG.parent.mkdir(parents=True, exist_ok=True)
-    RECON_LOG.write_text("\n".join(lines) + "\n")
+    lines = header + l1 + l2 + l3
     return lines, ok, r1 + r2 + r3
+
+
+def write_log(lines: list[str], passed: bool) -> None:
+    """Single writer for the reconciliation log.
+
+    reconcile() used to write the file itself. That made reading the check
+    results a side-effecting operation, and build_dashboard.py -- which calls
+    reconcile() only to read the records -- overwrote the complete four-check
+    log with a three-check one every time it ran after nim_bridge.py. The
+    committed artifact silently lost check 4. Writing is the caller's job now,
+    and it happens exactly once, after every check has run.
+    """
+    RECON_LOG.parent.mkdir(parents=True, exist_ok=True)
+    verdict = "all checks passed" if passed else "CHECKS FAILED — see above"
+    RECON_LOG.write_text("\n".join(lines + [f"**Overall: {verdict}**"]) + "\n")
 
 
 def build_bridge(df: pd.DataFrame) -> pd.DataFrame:
@@ -379,18 +390,16 @@ if __name__ == "__main__":
     log, ok, _ = reconcile(df, stated)
     print("\n".join(log))
     if not ok:
+        # Record the failure before stopping. A stale log left next to a
+        # refused build is worse than no log.
+        write_log(log, False)
         sys.exit("Reconciliation failed — refusing to write the bridge.")
 
     bridge = build_bridge(df)
     l4, ok4, _ = verify_attribution(bridge)
     print()
     print("\n".join(l4))
-    # Check 4 needs the built bridge, so the log is rewritten with it appended.
-    RECON_LOG.write_text(
-        "\n".join(log[:-1] + l4 + [
-            f"**Overall: {'all checks passed' if ok and ok4 else 'CHECKS FAILED — see above'}**"
-        ]) + "\n"
-    )
+    write_log(log + l4, ok and ok4)
     if not ok4:
         sys.exit("Attribution does not close on the change in PAT — refusing to write.")
 

@@ -153,3 +153,34 @@ def test_icici_npa_uses_advances_denominator_not_customer_assets():
         assert rows.loc[q, "gnpa_pct"] != pytest.approx(wrong_gnpa), (
             f"{q} GNPA is the customer-asset ratio, not the advances ratio"
         )
+
+
+def test_reconciliation_log_carries_all_four_checks():
+    """The committed log must show every check, not just the ones that ran last.
+
+    reconcile() used to write the log itself, so build_dashboard.py -- which
+    calls it only to read the check records -- overwrote the complete log with
+    a three-check version whenever it ran after nim_bridge.py. The artifact in
+    the repo lost check 4 while still claiming all checks passed.
+    """
+    log = (ROOT / "data" / "processed" / "reconciliation_log.md").read_text()
+    for n, title in ((1, "NII arithmetic tie-out"),
+                     (2, "Computed growth"),
+                     (3, "P&L walk"),
+                     (4, "Attribution closes")):
+        assert f"## {n}." in log, f"log is missing section {n} ({title})"
+        assert title in log, f"log section {n} heading changed: expected {title!r}"
+    assert "Overall:" in log
+    assert log.count("**Overall:") == 1, "more than one verdict line — log was written twice"
+
+
+def test_reconcile_does_not_write_the_log():
+    """Reading the check results must stay free of side effects."""
+    src = (ROOT / "src" / "nim_bridge.py").read_text()
+    body = src.split("def reconcile(")[1].split("\ndef ")[0]
+    assert "RECON_LOG.write_text" not in body, (
+        "reconcile() writes the log again — that is the bug that truncated it"
+    )
+    assert src.count("RECON_LOG.write_text") == 1, (
+        "the log must have exactly one writer (write_log)"
+    )

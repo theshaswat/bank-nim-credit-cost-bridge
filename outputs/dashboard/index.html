@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bank Margin &amp; Credit-Cost Bridge</title>
+<style>
+:root{
+  --navy:#1a3a5c; --rust:#c0522d; --sage:#5c7a5c; --sky:#4a7c9b; --ochre:#8c6d3f;
+  --ink:#16202b; --muted:#5d6b7a; --line:#d8dee5; --bg:#f4f6f8; --panel:#ffffff;
+  --pos:#2f6b4f; --neg:#a8412a; --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#e6edf3; --muted:#9bacbd; --line:#2b3745; --bg:#0f151c; --panel:#161e27;
+    --navy:#7ba7d0; --pos:#6bbd8f; --neg:#e08163; --sky:#6fa3c4; --ochre:#c0a165;
+    --rust:#d97a52; --sage:#8fb08f;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#e6edf3; --muted:#9bacbd; --line:#2b3745; --bg:#0f151c; --panel:#161e27;
+  --navy:#7ba7d0; --pos:#6bbd8f; --neg:#e08163; --sky:#6fa3c4; --ochre:#c0a165;
+  --rust:#d97a52; --sage:#8fb08f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 16px 48px}
+header{border-bottom:2px solid var(--navy);padding-bottom:12px;margin-bottom:18px}
+h1{font-size:19px;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.checkstrip{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel);
+  border:1px solid var(--line);border-radius:3px;padding:4px 9px;font-size:11.5px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.dot.ok{background:var(--pos)} .dot.na{background:var(--muted);opacity:.5}
+.chip b{font-weight:600}
+h2{font-size:14px;margin:26px 0 3px;letter-spacing:.02em;text-transform:uppercase;color:var(--navy)}
+.note{color:var(--muted);font-size:12.5px;margin:0 0 10px;max-width:74ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--line)}
+td{white-space:nowrap}
+th{background:var(--navy);color:#fff;font-weight:600;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.02em;position:sticky;top:0;
+  white-space:normal;line-height:1.25;vertical-align:bottom}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) th{color:#0f151c}}
+:root[data-theme="dark"] th{color:#0f151c}
+th:first-child,td:first-child{text-align:left}
+tbody tr:last-child td{border-bottom:none}
+td.num{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12.5px}
+td.tot{font-weight:700;border-left:2px solid var(--line)}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+tr.bankrow{cursor:pointer}
+tr.bankrow:hover td{background:color-mix(in srgb,var(--navy) 7%,transparent)}
+tr.bankrow[aria-selected="true"] td{background:color-mix(in srgb,var(--navy) 13%,transparent)}
+tr.bankrow[aria-selected="true"] td:first-child{box-shadow:inset 3px 0 0 var(--navy)}
+.grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:16px;align-items:start}
+.detail{position:sticky;top:12px}
+.detail h3{font-size:13.5px;margin:0 0 2px}
+.detail .who{color:var(--muted);font-size:12px;margin:0 0 10px}
+.dbody{padding:12px 13px}
+.walk{width:100%;max-width:430px;height:auto;display:block;margin:2px 0 10px}
+/* capped so the SVG does not scale its text past the page's own type scale when the panel goes full-width at tablet widths */
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:0 0 10px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--mono);text-align:right}
+.cite{font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);
+  padding-top:9px;margin-top:2px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.cite b{color:var(--ink);font-weight:600;display:block;margin-bottom:2px}
+.cite + .cite{margin-top:9px}
+.na{color:var(--muted);font-style:italic;font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--muted);margin:8px 2px 0}
+.legend i{display:inline-block;width:22px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:12px}
+.ck{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:11px 12px}
+.ck h4{margin:0 0 7px;font-size:12.5px;display:flex;align-items:center;gap:7px}
+.ck ul{margin:0;padding:0;list-style:none;font-size:11.5px;color:var(--muted)}
+.ck li{padding:3.5px 0;border-top:1px solid var(--line);line-height:1.4}
+.ck li:first-child{border-top:none}
+.ck .s{font-family:var(--mono);color:var(--ink);font-size:11px}
+footer{margin-top:30px;padding-top:12px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:11.5px;line-height:1.6}
+footer a{color:var(--navy)}
+@media(max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .detail{position:static}
+  th{position:static}
+}
+@media(max-width:560px){
+  .wrap{padding:14px 12px 36px}
+  h1{font-size:17px}
+  th,td{padding:6px 7px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Bank Margin &amp; Credit-Cost Bridge</h1>
+  <p class="sub">HDFC · ICICI · Axis · Kotak Mahindra — standalone, Q1 FY26 vs Q1 FY27.
+     Every figure page-cited; every comparison gated on four checks.</p>
+  <div class="checkstrip" id="strip"></div>
+</header>
+
+<h2>Where profit growth came from</h2>
+<p class="note">Each component's contribution to the change in profit, in percentage points of
+   the prior-year quarter's PAT. Shading is proportional to magnitude — green added to profit,
+   red subtracted. Select a bank for its full walk and sources.</p>
+<div class="grid">
+  <div class="panel scroll"><table id="attrib"></table></div>
+  <div class="panel detail"><div class="dbody" id="detail"></div></div>
+</div>
+<div class="legend">
+  <span><i style="background:var(--pos)"></i>added to profit</span>
+  <span><i style="background:var(--neg)"></i>reduced profit</span>
+  <span>Shading scaled to the largest single contribution in the panel.</span>
+</div>
+
+<h2>Margins and asset quality</h2>
+<p class="note">Credit-cost <em>levels</em> are not comparable across banks — each defines the
+   ratio differently, shown on selection. The change within a bank is. Cells marked
+   <span class="na">not disclosed</span> are genuine gaps in the filing, not omissions.</p>
+<div class="panel scroll"><table id="ratios"></table></div>
+
+<h2>Reconciliation</h2>
+<p class="note">Re-run against the CSVs each time this page is generated. The dashboard is not
+   written unless all four pass.</p>
+<div class="checks" id="checks"></div>
+
+<footer>
+  Source: Q1 FY26 and Q1 FY27 standalone results filings of each bank — URLs and SHA-256 hashes
+  in <code>data/raw/source_manifest.md</code>. Generated by <code>src/build_dashboard.py</code>
+  from <code>data/final/</code>; no figure on this page is written into the template.<br>
+  Shaswat Sharma · <a href="https://github.com/theshaswat">github.com/theshaswat</a>
+</footer>
+</div>
+
+<script>
+const DATA = {"quarterPrior": "Q1 FY26", "quarterCurrent": "Q1 FY27", "banks": [{"bank": "Kotak Mahindra Bank", "patGrowth": 25.624619134673978, "niiGrowth": 9.216145474583271, "niiSource": "reported", "contrib": {"nii": 20.383912248628885, "other_income": 7.861060329067642, "opex": -10.968921389396709, "provisions": 16.453382084095065, "tax": -8.104814137720902}, "contribCr": {"nii": 669.0, "other_income": 258.0, "opex": -360.0, "provisions": 540.0, "tax": -266.0}, "residualCr": 0.0, "deltaPatCr": 841.0, "patPrior": 3282.0, "patCurrent": 4123.0, "lines": [{"key": "nii", "label": "Net interest income", "prior": 7259.0, "current": 7928.0}, {"key": "other_income", "label": "Other income", "prior": 3080.0, "current": 3338.0}, {"key": "opex", "label": "Operating expenses", "prior": 4775.0, "current": 5135.0}, {"key": "provisions", "label": "Provisions", "prior": 1208.0, "current": 668.0}, {"key": "tax", "label": "Tax", "prior": 1074.0, "current": 1340.0}], "nim": [4.65, 4.53, -12.0], "gnpa": [1.48, 1.18, -30.0], "netNpa": [0.34, 0.27], "creditCost": [0.93, 0.46, -47.0], "creditCostDef": "credit cost on specific provisions", "advances": [444823.0, 512249.0, 15.157939225264872], "advancesBasis": "period-end net advances", "sourcePrior": "KOTAKBANK_Q1FY27_deck.pdf p.7 Profit and Loss Statement Q1FY26 column (NII 7259, Other Income 3080, Operating Expenditure 4775, Provision & Contingencies 1208, Provision For Tax 1074, PAT 3282); p.6 Bank Highlights Q1FY26 row (NIM 4.65%, credit cost 0.93%, Net NPA 0.34%); p.8 balance sheet 30-Jun-25 (Net Advances 444823, Deposits 512838); p.11 GNPA (%) 1.48%", "sourceCurrent": "KOTAKBANK_Q1FY27_deck.pdf p.7 Profit and Loss Statement Q1FY27 column (NII 7928, Other Income 3338, Operating Expenditure 5135, Provision & Contingencies 668, Provision For Tax 1340, PAT 4123); p.6 Bank Highlights (NIM 4.53%, credit cost 0.46%, Net NPA 0.27%); p.8 balance sheet 30-Jun-26 (Net Advances 512249, Deposits 572820); p.11 GNPA (%) 1.18%"}, {"bank": "Axis Bank", "patGrowth": 22.52841887702377, "niiGrowth": 8.008849557522124, "niiSource": "reported", "contrib": {"nii": 18.704788150189458, "other_income": -9.00792283844299, "opex": -7.216672407853944, "provisions": 29.710644161212542, "tax": -9.679641749913882}, "contribCr": {"nii": 1086.0, "other_income": -523.0, "opex": -419.0, "provisions": 1725.0, "tax": -562.0}, "residualCr": 1.0, "deltaPatCr": 1308.0, "patPrior": 5806.0, "patCurrent": 7114.0, "lines": [{"key": "nii", "label": "Net interest income", "prior": 13560.0, "current": 14646.0}, {"key": "other_income", "label": "Other income", "prior": 7258.0, "current": 6735.0}, {"key": "opex", "label": "Operating expenses", "prior": 9303.0, "current": 9722.0}, {"key": "provisions", "label": "Provisions", "prior": 3948.0, "current": 2223.0}, {"key": "tax", "label": "Tax", "prior": 1761.0, "current": 2323.0}], "nim": [3.8, 3.46, -34.0], "gnpa": [1.57, 1.28, -29.0], "netNpa": [0.45, 0.39], "creditCost": [1.38, 0.63, -75.0], "creditCostDef": "net credit cost (annualised)", "advances": [null, null, null], "advancesBasis": null, "sourcePrior": "AXISBANK_Q1FY27_deck.pdf p.62 Financial Performance table Q1FY26 column (Interest Income 31064, Interest Expended 17504, NII 13560, Other Income 7258, Operating Expenses 9303, Provisions other than taxes 3948, Provision for Tax 1761, Net Profit 5806); AXISBANK_Q1FY26_deck.pdf p.4 (NIM 3.80%, GNPA 1.57%, NNPA 0.45%, net credit cost annualised 1.38%)", "sourceCurrent": "AXISBANK_Q1FY27_deck.pdf p.62 Financial Performance table Q1FY27 column; p.4 (NIM 3.46%, GNPA 1.28% down 29bps YoY, NNPA 0.39%, net credit cost 0.63% down 75bps YoY); p.5 (Gross NPA Ratio 1.28% vs 1.57%)"}, {"bank": "ICICI Bank", "patGrowth": 15.948124286802944, "niiGrowth": 12.710693957695263, "niiSource": "derived", "contrib": {"nii": 21.53700479550383, "other_income": 0.5573216605929873, "opex": -9.248124835039523, "provisions": 4.339840901739554, "tax": -1.2379182359939216}, "contribCr": {"nii": 2749.8899999999994, "other_income": 71.15999999999985, "opex": -1180.8199999999997, "provisions": 554.1199999999999, "tax": -158.0599999999995}, "residualCr": 9.094947017729282e-13, "deltaPatCr": 2036.2900000000009, "patPrior": 12768.21, "patCurrent": 14804.5, "lines": [{"key": "nii", "label": "Net interest income", "prior": 21634.46, "current": 24384.35}, {"key": "other_income", "label": "Other income", "prior": 8504.9, "current": 8576.06}, {"key": "opex", "label": "Operating expenses", "prior": 11393.52, "current": 12574.34}, {"key": "provisions", "label": "Provisions", "prior": 1814.57, "current": 1260.45}, {"key": "tax", "label": "Tax", "prior": 4163.06, "current": 4321.12}], "nim": [null, null, null], "gnpa": [1.75, 1.42, -33.0], "netNpa": [0.44, 0.36], "creditCost": [null, null, null], "creditCostDef": null, "advances": [null, null, null], "advancesBasis": null, "sourcePrior": "ICICI_Q1FY27_deck.pdf p.1 STANDALONE FINANCIAL RESULTS Q1-2026 column (Interest earned 42946.91, Interest expended 21312.45, Other income 8504.90, Operating expenses 11393.52, Provisions 1814.57, Tax 4163.06, Net profit 12768.21); p.2 footnote 1 (gross NPA net of write-off to gross advances 1.75%, net NPA to net advances 0.44% at Jun 30 2025). NII is DERIVED as interest earned less interest expended -- ICICI does not print an NII line in this filing", "sourceCurrent": "ICICI_Q1FY27_deck.pdf p.1 STANDALONE FINANCIAL RESULTS Q1-2027 column; p.2 footnote 1 (gross NPA 1.42%, net NPA 0.36% at Jun 30 2026). NII is DERIVED, not reported. Standalone basis used deliberately: ICICI's consolidated results on p.9 include large insurance subsidiaries and are not comparable with the other three banks' standalone figures"}, {"bank": "HDFC Bank", "patGrowth": 4.955947136563887, "niiGrowth": 6.647582697201027, "niiSource": "reported", "contrib": {"nii": 11.508810572687226, "other_income": -49.06387665198238, "opex": -4.185022026431718, "provisions": 62.66519823788547, "tax": -16.079295154185022}, "contribCr": {"nii": 2090.0, "other_income": -8910.0, "opex": -760.0, "provisions": 11380.0, "tax": -2920.0}, "residualCr": 20.0, "deltaPatCr": 900.0, "patPrior": 18160.0, "patCurrent": 19060.0, "lines": [{"key": "nii", "label": "Net interest income", "prior": 31440.0, "current": 33530.0}, {"key": "other_income", "label": "Other income", "prior": 21730.0, "current": 12820.0}, {"key": "opex", "label": "Operating expenses", "prior": 17430.0, "current": 18190.0}, {"key": "provisions", "label": "Provisions", "prior": 14440.0, "current": 3060.0}, {"key": "tax", "label": "Tax", "prior": 3130.0, "current": 6050.0}], "nim": [3.35, 3.26, -9.0], "gnpa": [1.4, 1.17, -23.0], "netNpa": [null, null], "creditCost": [0.56, 0.4, -16.0], "creditCostDef": "credit cost (gross of recoveries)", "advances": [2742300.0, 3038600.0, 10.80479889144148], "advancesBasis": "average advances under management", "sourcePrior": "HDFCBANK_Q1FY27_deck.pdf p.4 standalone income statement Q1 FY26 column (NII 314.4bn, Non-interest income 217.3bn, Operating expenses 174.3bn, Provisions 144.4bn, PBT 212.9bn, PAT 181.6bn; tax 31.3bn = PBT less PAT) x100 to Rs Cr; HDFCBANK_Q1FY26_deck.pdf p.3 (average deposits 26576bn, average advances under management 27423bn, NIM 3.35%, GNPA 1.40%) x100 to Rs Cr; credit cost 56bps read from HDFCBANK_Q1FY27_deck.pdf p.19 chart by word coordinates, cross-validated against HDFCBANK_Q1FY26_deck.pdf p.20 which shows the same 56bps for Jun-25", "sourceCurrent": "HDFCBANK_Q1FY27_deck.pdf p.4 standalone income statement Q1 FY27 column (NII 335.3bn, Non-interest income 128.2bn, Operating expenses 181.9bn, Provisions 30.6bn, PBT 251.1bn, PAT 190.6bn; tax 60.5bn = PBT less PAT) x100 to Rs Cr; p.3 (average deposits 30115bn, average advances under management 30386bn, NIM 3.26%, GNPA 1.17%) x100 to Rs Cr; credit cost 40bps read from p.19 chart by word coordinates. Non-interest income falls 41% YoY because Q1 FY26 included a one-time gain on the partial divestment of HDB Financial Services; see p.4 footnote"}], "checks": [{"check": "NII arithmetic tie-out", "subject": "Axis Bank Q1 FY26", "passed": true, "detail": "31,064 \u2212 17,504 = 13,560 vs printed 13,560"}, {"check": "NII arithmetic tie-out", "subject": "Axis Bank Q1 FY27", "passed": true, "detail": "33,986 \u2212 19,340 = 14,646 vs printed 14,646"}, {"check": "NII arithmetic tie-out", "subject": "ICICI Bank", "passed": null, "detail": "NII derived \u2014 no printed NII line to check against"}, {"check": "NII arithmetic tie-out", "subject": "HDFC Bank", "passed": null, "detail": "NII printed but no interest income/expended split disclosed"}, {"check": "NII arithmetic tie-out", "subject": "Kotak Mahindra Bank", "passed": null, "detail": "NII printed but no interest income/expended split disclosed"}, {"check": "Computed vs published growth", "subject": "Axis Bank \u2014 nii", "passed": true, "detail": "computed +8.01% vs bank-stated +8.0% (tolerance 0.5pp)"}, {"check": "Computed vs published growth", "subject": "Axis Bank \u2014 pat", "passed": true, "detail": "computed +22.53% vs bank-stated +23.0% (tolerance 0.5pp)"}, {"check": "Computed vs published growth", "subject": "Axis Bank \u2014 interest_income", "passed": true, "detail": "computed +9.41% vs bank-stated +9.0% (tolerance 0.5pp)"}, {"check": "Computed vs published growth", "subject": "Axis Bank \u2014 interest_expended", "passed": true, "detail": "computed +10.49% vs bank-stated +10.0% (tolerance 0.5pp)"}, {"check": "Computed vs published growth", "subject": "Kotak Mahindra Bank \u2014 nii", "passed": true, "detail": "computed +9.22% vs bank-stated +9.0% (tolerance 0.5pp)"}, {"check": "Computed vs published growth", "subject": "Kotak Mahindra Bank \u2014 pat", "passed": true, "detail": "computed +25.62% vs bank-stated +26.0% (tolerance 0.5pp)"}, {"check": "Computed vs published growth", "subject": "HDFC Bank \u2014 nii", "passed": true, "detail": "computed +6.65% vs bank-stated +6.7% (tolerance 0.1pp)"}, {"check": "Computed vs published growth", "subject": "HDFC Bank \u2014 pat", "passed": true, "detail": "computed +4.96% vs bank-stated +5.0% (tolerance 0.1pp)"}, {"check": "P&L walk to reported PAT", "subject": "Axis Bank Q1 FY26", "passed": true, "detail": "walk 5,806 vs reported PAT 5,806 (diff +0, tolerance \u00b12 Cr)"}, {"check": "P&L walk to reported PAT", "subject": "Axis Bank Q1 FY27", "passed": true, "detail": "walk 7,113 vs reported PAT 7,114 (diff -1, tolerance \u00b12 Cr)"}, {"check": "P&L walk to reported PAT", "subject": "HDFC Bank Q1 FY26", "passed": true, "detail": "walk 18,170 vs reported PAT 18,160 (diff +10, tolerance \u00b125 Cr)"}, {"check": "P&L walk to reported PAT", "subject": "HDFC Bank Q1 FY27", "passed": true, "detail": "walk 19,050 vs reported PAT 19,060 (diff -10, tolerance \u00b125 Cr)"}, {"check": "P&L walk to reported PAT", "subject": "ICICI Bank Q1 FY26", "passed": true, "detail": "walk 12,768 vs reported PAT 12,768 (diff +0, tolerance \u00b10 Cr)"}, {"check": "P&L walk to reported PAT", "subject": "ICICI Bank Q1 FY27", "passed": true, "detail": "walk 14,804 vs reported PAT 14,804 (diff -0, tolerance \u00b10 Cr)"}, {"check": "P&L walk to reported PAT", "subject": "Kotak Mahindra Bank Q1 FY26", "passed": true, "detail": "walk 3,282 vs reported PAT 3,282 (diff +0, tolerance \u00b12 Cr)"}, {"check": "P&L walk to reported PAT", "subject": "Kotak Mahindra Bank Q1 FY27", "passed": true, "detail": "walk 4,123 vs reported PAT 4,123 (diff +0, tolerance \u00b12 Cr)"}, {"check": "Attribution closes on \u0394PAT", "subject": "Kotak Mahindra Bank", "passed": true, "detail": "residual +0 Cr against \u0394PAT +841 Cr (bound \u00b15 Cr)"}, {"check": "Attribution closes on \u0394PAT", "subject": "Axis Bank", "passed": true, "detail": "residual +1 Cr against \u0394PAT +1,308 Cr (bound \u00b15 Cr)"}, {"check": "Attribution closes on \u0394PAT", "subject": "ICICI Bank", "passed": true, "detail": "residual +0 Cr against \u0394PAT +2,036 Cr (bound \u00b10 Cr)"}, {"check": "Attribution closes on \u0394PAT", "subject": "HDFC Bank", "passed": true, "detail": "residual +20 Cr against \u0394PAT +900 Cr (bound \u00b150 Cr)"}]};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const KEYS = ["nii","other_income","opex","provisions","tax"];
+const LABEL = {nii:"Net interest income",other_income:"Other income",
+               opex:"Operating expenses",provisions:"Provisions",tax:"Tax"};
+const cr = v => v == null ? "—" : (v<0?"−":"") + "₹" + Math.abs(v).toLocaleString("en-IN",
+                 {maximumFractionDigits:0});
+const pp = v => v == null ? "—" : (v>=0?"+":"−") + Math.abs(v).toFixed(1);
+const pct = v => v == null ? "—" : (v>=0?"+":"−") + Math.abs(v).toFixed(1) + "%";
+const bps = v => v == null ? null : (v>=0?"+":"−") + Math.abs(v).toFixed(0) + " bps";
+const sign = v => v == null ? "" : v>=0 ? "pos" : "neg";
+
+/* Shading is scaled to the largest single contribution actually present, so the
+   colour ramp always spans the real range rather than a hard-coded maximum. */
+const MAXC = Math.max(...DATA.banks.flatMap(b => KEYS.map(k => Math.abs(b.contrib[k]))));
+const tint = v => {
+  const a = (Math.abs(v)/MAXC)*0.5;
+  return `background:color-mix(in srgb, var(--${v>=0?'pos':'neg'}) ${(a*100).toFixed(1)}%, transparent)`;
+};
+
+function attribTable(){
+  const head = `<thead><tr><th>Bank</th>${KEYS.map(k=>`<th>${LABEL[k]}</th>`).join("")}
+    <th>Reported PAT growth</th></tr></thead>`;
+  const rows = DATA.banks.map((b,i)=>`<tr class="bankrow" data-i="${i}" tabindex="0"
+      role="button" aria-selected="${i===0}">
+    <td>${esc(b.bank)}</td>
+    ${KEYS.map(k=>`<td class="num" style="${tint(b.contrib[k])}">${pp(b.contrib[k])}</td>`).join("")}
+    <td class="num tot ${sign(b.patGrowth)}">${pct(b.patGrowth)}</td></tr>`).join("");
+  $("#attrib").innerHTML = head + `<tbody>${rows}</tbody>`;
+  $("#attrib").querySelectorAll(".bankrow").forEach(tr=>{
+    const pick = ()=>select(+tr.dataset.i);
+    tr.addEventListener("click", pick);
+    tr.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();} });
+  });
+}
+
+/* A waterfall from prior-quarter PAT to current, in Rs Crore. The bars are the
+   same five components as the table above, at their actual rupee magnitudes. */
+function waterfall(b){
+  const steps = KEYS.map(k=>({label:LABEL[k], v:b.contribCr[k]}));
+  if (Math.abs(b.residualCr) >= 1) steps.push({label:"Rounding", v:b.residualCr});
+  const W=340, rowH=21, padL=132, padR=54, H=(steps.length+2)*rowH+8;
+  let run = b.patPrior;
+  const vals=[b.patPrior]; steps.forEach(s=>{run+=s.v; vals.push(run);});
+  const lo=Math.min(0,...vals), hi=Math.max(...vals);
+  const x = v => padL + ((v-lo)/(hi-lo||1))*(W-padL-padR);
+  let y=4, out="";
+  const bar=(label,x1,x2,cls,txt)=>{
+    const l=Math.min(x1,x2), w=Math.max(1.5,Math.abs(x2-x1));
+    out+=`<text x="${padL-7}" y="${y+13}" text-anchor="end" font-size="10.5"
+      fill="var(--muted)">${esc(label)}</text>
+      <rect x="${l}" y="${y+4}" width="${w}" height="12" rx="1.5" fill="var(--${cls})"/>
+      <text x="${W-padR+6}" y="${y+13}" font-size="10.5" font-family="var(--mono)"
+      fill="var(--ink)">${txt}</text>`;
+    y+=rowH;
+  };
+  bar(DATA.quarterPrior+" PAT", x(0), x(b.patPrior), "navy", cr(b.patPrior));
+  run=b.patPrior;
+  steps.forEach(s=>{ const a=run; run+=s.v; bar(s.label, x(a), x(run), s.v>=0?"pos":"neg",
+    (s.v>=0?"+":"−")+cr(Math.abs(s.v)).replace("₹","₹")); });
+  bar(DATA.quarterCurrent+" PAT", x(0), x(b.patCurrent), "navy", cr(b.patCurrent));
+  return `<svg class="walk" viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="Profit walk for ${esc(b.bank)}">${out}</svg>`;
+}
+
+function ratioBlock(b){
+  const row=(k,label,a,bv,d,unit)=>{
+    if(a==null && bv==null) return `<dt>${label}</dt><dd class="na">not disclosed</dd>`;
+    return `<dt>${label}</dt><dd>${a==null?"—":a.toFixed(2)+unit} → ${bv==null?"—":bv.toFixed(2)+unit}
+      ${d==null?"":`<span class="${sign(d)}"> ${bps(d)}</span>`}</dd>`;
+  };
+  return `<dl class="kv">
+    ${row("nim","Net interest margin",b.nim[0],b.nim[1],b.nim[2],"%")}
+    ${row("gnpa","Gross NPA",b.gnpa[0],b.gnpa[1],b.gnpa[2],"%")}
+    ${row("cc","Credit cost",b.creditCost[0],b.creditCost[1],b.creditCost[2],"%")}
+  </dl>`;
+}
+
+function select(i){
+  DATA.banks.forEach((_,j)=>{
+    const tr=$(`#attrib tr[data-i="${j}"]`); if(tr) tr.setAttribute("aria-selected", j===i);
+  });
+  const b=DATA.banks[i];
+  const derived = b.niiSource==="derived"
+    ? `<p class="note" style="margin:0 0 9px">NII is <b>derived</b> here as interest earned less
+       interest expended — this filing prints no NII line — so it is excluded from the
+       arithmetic tie-out.</p>` : "";
+  $("#detail").innerHTML = `
+    <h3>${esc(b.bank)}</h3>
+    <p class="who">Profit walk, ${esc(DATA.quarterPrior)} → ${esc(DATA.quarterCurrent)}, ₹ Crore</p>
+    ${waterfall(b)}
+    ${derived}
+    ${ratioBlock(b)}
+    ${b.creditCostDef?`<p class="note" style="margin:-4px 0 9px">Credit cost defined as
+      <b>${esc(b.creditCostDef)}</b> — not comparable with the other banks' levels.</p>`:""}
+    ${b.advances[0]!=null?`<dl class="kv"><dt>Advances (${esc(b.advancesBasis||"")})</dt>
+      <dd>${cr(b.advances[0])} → ${cr(b.advances[1])}
+      <span class="${sign(b.advances[2])}"> ${pct(b.advances[2])}</span></dd></dl>`:""}
+    <div class="cite"><b>${esc(DATA.quarterPrior)} source</b>${esc(b.sourcePrior||"—")}</div>
+    <div class="cite"><b>${esc(DATA.quarterCurrent)} source</b>${esc(b.sourceCurrent||"—")}</div>`;
+}
+
+function ratiosTable(){
+  const head=`<thead><tr><th>Bank</th><th>NII growth</th><th>NIM change</th>
+    <th>Gross NPA</th><th>Gross NPA change</th><th>Credit cost change</th></tr></thead>`;
+  const cell=v=>v==null?`<td class="na">not disclosed</td>`
+    :`<td class="num ${sign(v)}">${bps(v)}</td>`;
+  const rows=DATA.banks.map(b=>`<tr>
+    <td>${esc(b.bank)}</td>
+    <td class="num ${sign(b.niiGrowth)}">${pct(b.niiGrowth)}${b.niiSource==="derived"
+      ?' <span class="na" title="derived, not printed by the bank">derived</span>':""}</td>
+    ${cell(b.nim[2])}
+    <td class="num">${b.gnpa[1]==null?"—":b.gnpa[1].toFixed(2)+"%"}</td>
+    ${cell(b.gnpa[2])}
+    ${cell(b.creditCost[2])}</tr>`).join("");
+  $("#ratios").innerHTML=head+`<tbody>${rows}</tbody>`;
+}
+
+function checks(){
+  const groups={};
+  DATA.checks.forEach(c=>{(groups[c.check] ||= []).push(c);});
+  $("#strip").innerHTML = Object.entries(groups).map(([name,cs])=>{
+    const run=cs.filter(c=>c.passed!==null), pass=run.filter(c=>c.passed).length;
+    const na=cs.length-run.length;
+    return `<span class="chip"><span class="dot ${pass===run.length?"ok":"na"}"></span>
+      ${esc(name)} <b>${pass}/${run.length}</b>${na?` <span class="na">+${na} n/a</span>`:""}</span>`;
+  }).join("");
+  $("#checks").innerHTML = Object.entries(groups).map(([name,cs])=>{
+    const run=cs.filter(c=>c.passed!==null), pass=run.filter(c=>c.passed).length;
+    return `<div class="ck"><h4><span class="dot ${pass===run.length?"ok":"na"}"></span>
+      ${esc(name)} — ${pass}/${run.length} passed</h4><ul>${cs.map(c=>
+      `<li>${c.passed===null?'<span class="na">not applicable</span>':"✓"}
+        ${esc(c.subject)}<br><span class="s">${esc(c.detail)}</span></li>`).join("")}</ul></div>`;
+  }).join("");
+}
+
+attribTable(); ratiosTable(); checks(); select(0);
+</script>
+</body>
+</html>

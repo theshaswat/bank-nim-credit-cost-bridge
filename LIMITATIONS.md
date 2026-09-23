@@ -2,75 +2,111 @@
 
 Stated plainly, not hedged into vagueness.
 
+## One year-on-year comparison cannot separate a credit cycle from a provisioning cycle
+
+This is the limitation that matters most, because it bears directly on the
+project's main finding. Provisions fell at all four banks and contributed
+most of the profit growth at three of them. The gross NPA ratio also fell at
+all four, which supports reading that as a genuine improvement in the book
+rather than a decision to provide less.
+
+But two quarters twelve months apart cannot settle it. A bank running down a
+provision buffer built in an earlier cycle and a bank whose borrowers are
+genuinely repaying better will both show falling provisions against falling
+NPAs for several quarters. Distinguishing them needs the provision coverage
+ratio and a slippage series across more quarters than this project covers.
+The finding here is what the disclosed figures support; it is not proof that
+the improvement persists.
+
 ## Not a rate/volume/mix decomposition
 
-The original plan for this project was a three-factor decomposition of NII
-change into rate effect, volume effect, and a mix/interaction term —
-standard practice for a bank margin bridge. It's not attempted here. The
-reason: HDFC and Kotak disclose average balances and a headline NIM%
-directly, but their yield-on-assets and cost-of-funds figures — the two
-inputs a rate/volume/mix split actually needs — exist only as chart labels
-in their decks, and plain-text PDF extraction can't map those labels to
-values unambiguously (the numbers sit in a chart, not a table, with no
-reliable position-to-label correspondence). Axis and ICICI do disclose a
-clean enough interest income/expense table to compute NII growth, but not
-the yield/cost-of-funds split either. A decomposition run on two of four
-banks' real numbers and two banks' guessed numbers would look complete and
-be half-fabricated — not attempted, for that reason specifically.
+The original plan was a three-factor decomposition of the NII change into
+rate, volume and mix effects — standard for a bank margin bridge. It is not
+attempted, and the reason is specific rather than general.
+
+That decomposition needs yield on assets and cost of funds for both periods.
+HDFC and Kotak publish those only as labels inside chart images in their
+decks, with no reliable position-to-label correspondence available to
+plain-text extraction. Axis and ICICI publish a clean interest
+income/expended table, which is enough for NII growth but not for the
+yield/cost split either. A decomposition built on two banks' real numbers and
+two banks' guessed ones would look complete and be half-fabricated.
+
+What replaced it — a P&L-level attribution of the change in profit across
+NII, other income, opex, provisions and tax — uses only figures all four
+banks actually print, and reconciles to each bank's reported bottom line.
+It answers a coarser question than rate/volume/mix would have, and it answers
+it on real numbers.
 
 ## Not a panel regression
 
-Four banks, two quarters. That's 8 observations, not a panel with enough
-degrees of freedom for any regression-based inference. No wild-cluster
-bootstrap, no clustered standard errors, no p-values anywhere in this
-project — `indfin.stats.wild_cluster` exists as a general-purpose module for
-a project that actually has a panel (e.g., more quarters, more banks), but
-running it here would produce a statistic with no real meaning behind it.
+Four banks, two quarters: eight observations. No regression, no clustered
+standard errors, no p-values anywhere in this project.
+`indfin.stats.wild_cluster` exists for a project that actually has a panel;
+running it on eight observations would produce a statistic with nothing
+behind it.
 
-## Incomplete rows are a feature, not a gap to paper over
+## What is genuinely not disclosed
 
-The summary table has blank cells for every metric a bank doesn't disclose
-in a form this project could independently verify:
-- Only Axis and ICICI have `nii_growth_yoy_pct` (they're the only two
-  disclosing Interest Income/Expended separately, which is what lets NII be
-  tied out against the bank's own reported figure via `indfin.check_nii`
-  rather than trusted blindly).
-- Only HDFC and Kotak have `nim_change_bps` and `gnpa_change_bps`.
-- Only Kotak has `credit_cost_change_bps`.
+Three gaps, all real, none worked around with a secondary source:
 
-No secondary source was used to fill any of these in. A complete-looking
-table across all four banks on all six metrics would have required pulling
-figures from somewhere other than each bank's own primary disclosure for
-that quarter, which would break this project's core standard (every number
-traceable to a specific, cited page of the bank's own filing).
+- **ICICI publishes no net interest margin and no credit-cost ratio** in
+  this filing. Those two cells are empty for ICICI and it is excluded from
+  the margin-vs-credit-cost exhibit, which the chart states on its face.
+- **ICICI publishes no NII line at all.** Its NII is derived here as interest
+  earned less interest expended, flagged `nii_source = derived`, and excluded
+  from the arithmetic tie-out — checking a derived figure against the
+  definition it was derived from would pass by construction and prove
+  nothing.
+- **HDFC and Kotak publish NII but not the interest income/expended split**,
+  so their NII cannot be tied out arithmetically either. Both are covered by
+  reconciliation check 2 instead, against growth percentages they publish
+  themselves.
 
-## Basis asymmetry
+An earlier revision of this project claimed considerably more was undisclosed
+than actually is. That was under-collection rather than a disclosure limit,
+and it was corrected: all four banks do publish NII, and all four publish a
+gross NPA ratio.
 
-- **ICICI Bank**'s two source decks are different document types: Q1FY26 is
-  a full investor presentation (59 pages), Q1FY27 is the shorter regulatory
-  results filing (13 pages). Both carry the same results-table structure and
-  both tie out via `check_nii`, but it's a genuine format difference between
-  the two periods being compared, not an oversight.
-- Basis (standalone vs. consolidated) is noted per-row in
-  `verified_inputs.csv` rather than normalized — see `DATA_DICTIONARY.md`.
+## Measures that are not comparable across banks
 
-## Kotak Q1FY26 source file
+- **Credit-cost levels.** HDFC reports gross of recoveries, Axis reports net
+  credit cost annualised, Kotak reports specific provisions only. Within-bank
+  change is comparable; the level across banks is not, and no exhibit places
+  those levels side by side.
+- **Advances.** HDFC publishes average advances under management, Kotak
+  publishes period-end net advances. Recorded with an explicit
+  `advances_basis` column rather than pooled into one series.
+- **Net interest margin.** Each bank computes it on its own asset base. The
+  change is the meaningful comparison, not the level.
+
+## HDFC's reporting precision
+
+HDFC publishes its standalone income statement in ₹ billion to one decimal,
+so each line carries up to ±₹5 Cr of rounding. Its P&L walk closes to within
+₹10 Cr and its attribution to within ₹20 Cr, both inside bounds derived from
+that precision and both recorded explicitly in `rounding_residual_cr` rather
+than absorbed. The other three banks close exactly or to within ₹1 Cr.
+
+## Source-document asymmetry
+
+ICICI's two periods come from different document types: a 59-page investor
+presentation for Q1 FY26 and a 13-page regulatory results filing for Q1 FY27.
+Both carry the same results-table structure, but it is a genuine format
+difference between the two periods being compared.
 
 `KOTAKBANK_Q1FY26_deck.pdf` downloaded with a corrupted internal xref
-structure — failed both pdfplumber's strict parser and a lenient pypdf
-re-parse (recovered only 26 of an expected ~38 pages, and the recovered file
-still failed the stricter parser downstream). Rather than add a second PDF
-parser to the pipeline to accommodate one file, it was dropped. The gap
-turned out to be moot: Kotak's own Q1FY27 deck (`page 6`, "Bank Highlights"
-table, and `page 8`, balance sheet) already carries the Q1FY26 comparative
-column, so both quarters in this project come from one verified file. The
-corrupted file itself is not included in this repository.
+structure — it failed pdfplumber's strict parser and a lenient pypdf
+re-parse recovered only 26 of roughly 38 pages. Rather than add a second
+parser to the pipeline for one file, it was dropped. The gap turned out to be
+moot: Kotak's Q1 FY27 deck carries the Q1 FY26 comparative column for every
+figure this project needs. The corrupted file is not in this repository.
 
-## What this doesn't claim
+## What this project does not claim
 
-This project doesn't rank the four banks against each other on overall
-performance, doesn't forecast forward margin or credit cost, and doesn't
-attribute causes to any bank's NII-vs-PAT gap that the disclosed figures
-can't actually explain (see the memo's Axis Bank section, where NII growth
-alone doesn't account for PAT growth and the memo says so rather than
-guessing which other line did).
+It does not rank the four banks on overall performance, does not forecast
+forward margin or credit cost, and does not attribute a cause to any
+movement the disclosed figures cannot support. Where the attribution shows
+a large swing driven by a one-off — HDFC's other income is the clear case —
+the one-off is named rather than absorbed into a narrative about the
+underlying business.

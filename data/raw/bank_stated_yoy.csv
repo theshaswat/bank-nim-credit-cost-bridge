@@ -1,0 +1,9 @@
+bank,metric,stated_yoy_pct,tolerance_pp,source_page_note
+Axis Bank,nii,8,0.5,"AXISBANK_Q1FY27_deck.pdf p.62, % Growth column against Net Interest Income"
+Axis Bank,pat,23,0.5,"AXISBANK_Q1FY27_deck.pdf p.62, % Growth column against Net Profit"
+Axis Bank,interest_income,9,0.5,"AXISBANK_Q1FY27_deck.pdf p.62, % Growth column against Interest Income"
+Axis Bank,interest_expended,10,0.5,"AXISBANK_Q1FY27_deck.pdf p.62, % Growth column against Interest Expended"
+Kotak Mahindra Bank,nii,9,0.5,"KOTAKBANK_Q1FY27_deck.pdf p.7, YoY column against Net Interest Income"
+Kotak Mahindra Bank,pat,26,0.5,"KOTAKBANK_Q1FY27_deck.pdf p.7, YoY column against PAT"
+HDFC Bank,nii,6.7,0.1,"HDFCBANK_Q1FY27_deck.pdf p.4, YoY column against Net interest income"
+HDFC Bank,pat,5.0,0.1,"HDFCBANK_Q1FY27_deck.pdf p.4, YoY column against Profit after tax"

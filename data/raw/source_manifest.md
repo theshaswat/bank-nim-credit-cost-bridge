@@ -16,6 +16,14 @@ timestamp, and a SHA-256 hash.
 All seven hashes re-verified against the files in `investor_decks/` at
 build time (`shasum -a 256`) — match, no drift since download.
 
+`bank_stated_yoy.csv` sits alongside them in `data/raw/`. It is not a
+downloaded file: it records the year-on-year growth percentages each bank
+printed in its own deck, transcribed with a page citation per row. It is
+kept in `raw/` and separate from the extracted absolutes on purpose —
+reconciliation check 2 compares growth recomputed from those absolutes
+against these published figures, and that check is only independent if the
+two sets of numbers never touch.
+
 ## Notes on the filings
 
 - **HDFC Bank**: page 3 of each deck discloses average deposits and average
@@ -34,10 +42,18 @@ build time (`shasum -a 256`) — match, no drift since download.
   quarters (see `data/processed/reconciliation_log.md`) — exact match.
 - **ICICI Bank**: the Q1FY26 deck (investor-presentation format, 59 pages)
   and Q1FY27 deck (regulatory results-filing format, 13 pages) are
-  different document types from the same filer — a deliberate, documented
-  basis choice, not an oversight. Both carry the same results table
-  structure (Interest Income, Interest Expended, NII, PAT) on their
-  respective results page, and both tie out exactly via `check_nii`.
+  different document types from the same filer — a genuine format
+  difference between the two periods, documented rather than smoothed over.
+  Both carry a results table with Interest earned, Interest expended, Other
+  income, Operating expenses, Provisions, Tax and Net profit. Neither
+  prints a net interest income line: ICICI's NII is **derived** here as
+  interest earned less interest expended, flagged `nii_source = derived`,
+  and deliberately **excluded** from the `check_nii` tie-out, because
+  checking a derived figure against the definition it came from would pass
+  by construction. Both quarters of ICICI are used on a **standalone**
+  basis — the consolidated results on p.9 of the Q1FY27 filing include
+  large insurance subsidiaries and are not comparable with the other three
+  banks.
 - **Kotak Mahindra Bank**: `KOTAKBANK_Q1FY26_deck.pdf` was downloaded but
   had a corrupted internal xref structure at the source (fails both
   pdfplumber's strict parser and a lenient pypdf re-parse past 26 of an
@@ -49,12 +65,16 @@ build time (`shasum -a 256`) — match, no drift since download.
 
 ## Scope note
 
-This bridge covers 4 major private-sector banks (HDFC, Axis, ICICI, Kotak
-Mahindra) comparing Q1 FY26 vs Q1 FY27 (YoY, quarter ended 30-Jun), not a
-12-quarter panel. The methodology is a comparative YoY bridge built only
-from unambiguously disclosed figures (NII where the interest income/expense
-split exists, NIM%/GNPA%/credit-cost% where stated directly) — not a
-forced three-factor rate/volume/mix regression across all four banks, since
-the four don't disclose a common enough set of inputs to support one
-common model honestly. See `reports/` for the full methodology writeup and
-`LIMITATIONS.md` for what this deliberately does not attempt.
+This bridge covers four major private-sector banks (HDFC, ICICI, Axis,
+Kotak Mahindra) comparing Q1 FY27 against Q1 FY26 (year on year, quarters
+ended 30 June), all on a standalone basis. It is not a 12-quarter panel.
+
+The method is a P&L-level attribution: the change in each bank's reported
+profit is decomposed across net interest income, other income, operating
+expenses, provisions and tax — five lines all four banks actually print.
+Four reconciliation checks run before any comparison is written, and the
+bridge is not produced unless all four pass. See
+`data/processed/reconciliation_log.md` for the results, `reports/` for the
+methodology writeup, and `LIMITATIONS.md` for what this deliberately does
+not attempt — in particular the rate/volume/mix decomposition, which two of
+the four banks do not disclose the inputs for.

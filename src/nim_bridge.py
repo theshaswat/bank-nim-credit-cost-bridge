@@ -118,15 +118,20 @@ def check_nii_tieout(df: pd.DataFrame) -> tuple[list[str], bool, list[dict]]:
                   & df["interest_income_cr"].isna()]["bank"].unique()
     lines += [
         "",
-        "*Not tie-outable — NII derived, no printed NII line to check against:* "
-        f"{', '.join(sorted(derived)) or 'none'}.",
+        "*Not tie-outable — NII derived; the filing carries no NII line to "
+        "check it against, and checking a derived figure against its own "
+        "definition would pass by construction:* "
+        f"{', '.join(sorted(derived)) or 'none'}. See "
+        "`data/raw/source_manifest.md` for the external corroboration of "
+        "ICICI's Q1 FY26 derivation against the NII printed in its own "
+        "investor presentation.",
         "*Not tie-outable — NII printed but no interest income/expended split "
         f"disclosed:* {', '.join(sorted(no_split)) or 'none'}.",
         "",
     ]
     for b in sorted(derived):
         recs.append({"check": "NII arithmetic tie-out", "subject": b, "passed": None,
-                     "detail": "NII derived — no printed NII line to check against"})
+                     "detail": "NII derived — this filing prints no NII line; corroborated externally for Q1 FY26 (see source manifest)"})
     for b in sorted(no_split):
         recs.append({"check": "NII arithmetic tie-out", "subject": b, "passed": None,
                      "detail": "NII printed but no interest income/expended split disclosed"})

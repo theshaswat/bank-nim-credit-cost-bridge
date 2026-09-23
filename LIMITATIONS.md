@@ -53,11 +53,16 @@ Three gaps, all real, none worked around with a secondary source:
 - **ICICI publishes no net interest margin and no credit-cost ratio** in
   this filing. Those two cells are empty for ICICI and it is excluded from
   the margin-vs-credit-cost exhibit, which the chart states on its face.
-- **ICICI publishes no NII line at all.** Its NII is derived here as interest
-  earned less interest expended, flagged `nii_source = derived`, and excluded
-  from the arithmetic tie-out — checking a derived figure against the
-  definition it was derived from would pass by construction and prove
-  nothing.
+- **ICICI's regulatory filing prints no NII line.** Its NII is derived here
+  as interest earned less interest expended, flagged `nii_source = derived`,
+  and excluded from the arithmetic tie-out — checking a derived figure against
+  the definition it was derived from would pass by construction and prove
+  nothing. For Q1 FY26 there is an external check, and it holds: ICICI's own
+  Q1 FY26 investor presentation prints standalone NII of ₹216.35 bn on page 7,
+  against ₹21,634.46 Cr derived here from the regulatory filing — a difference
+  of ₹0.54 Cr, 0.002% of the figure. That corroboration does not extend to
+  Q1 FY27, where no ICICI document carrying a printed NII line was obtained,
+  so the Q1 FY27 derivation rests on the filing alone.
 - **HDFC and Kotak publish NII but not the interest income/expended split**,
   so their NII cannot be tied out arithmetically either. Both are covered by
   reconciliation check 2 instead, against growth percentages they publish
@@ -90,10 +95,12 @@ than absorbed. The other three banks close exactly or to within ₹1 Cr.
 
 ## Source-document asymmetry
 
-ICICI's two periods come from different document types: a 59-page investor
-presentation for Q1 FY26 and a 13-page regulatory results filing for Q1 FY27.
-Both carry the same results-table structure, but it is a genuine format
-difference between the two periods being compared.
+Both ICICI periods are taken from one document — the 13-page Q1 FY27
+regulatory results filing, which carries the Q1 FY26 comparative column for
+every P&L line used here. An earlier revision of this file described the two
+periods as coming from different document types; that was wrong. ICICI's
+Q1 FY26 investor presentation is kept in `data/raw/` for one purpose only:
+the independent NII corroboration noted above.
 
 `KOTAKBANK_Q1FY26_deck.pdf` downloaded with a corrupted internal xref
 structure — it failed pdfplumber's strict parser and a lenient pypdf

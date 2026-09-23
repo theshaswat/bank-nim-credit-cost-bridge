@@ -9,7 +9,7 @@ Run only where a bank prints both the interest income/expended split and its own
 - **Axis Bank Q1 FY26**: PASS — 31,064.00 − 17,504.00 = 13,560.00 vs printed 13,560.00 (diff 0.00)
 - **Axis Bank Q1 FY27**: PASS — 33,986.00 − 19,340.00 = 14,646.00 vs printed 14,646.00 (diff 0.00)
 
-*Not tie-outable — NII derived, no printed NII line to check against:* ICICI Bank.
+*Not tie-outable — NII derived; the filing carries no NII line to check it against, and checking a derived figure against its own definition would pass by construction:* ICICI Bank. See `data/raw/source_manifest.md` for the external corroboration of ICICI's Q1 FY26 derivation against the NII printed in its own investor presentation.
 *Not tie-outable — NII printed but no interest income/expended split disclosed:* HDFC Bank, Kotak Mahindra Bank.
 
 ## 2. Computed growth vs the bank's own published growth

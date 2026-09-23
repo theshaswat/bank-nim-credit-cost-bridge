@@ -83,7 +83,10 @@ convenience. Its NII is **derived** here as interest earned less interest
 expended, because ICICI prints no NII line — that is flagged in the data as
 `nii_source = derived` and excluded from the arithmetic tie-out, since
 checking a derived figure against its own definition would pass by
-construction and prove nothing.
+construction and prove nothing. The Q1 FY26 derivation does get an external
+check: ICICI's Q1 FY26 investor presentation prints standalone NII of
+₹216.35 bn, against ₹21,634.46 Cr derived here — ₹0.54 Cr apart. No
+equivalent document was obtained for Q1 FY27.
 
 Advances are on different bases: HDFC publishes average advances under
 management, Kotak publishes period-end net advances. Both are recorded with

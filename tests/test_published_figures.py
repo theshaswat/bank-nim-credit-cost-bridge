@@ -108,3 +108,48 @@ def test_memo_quotes_current_pat_growth():
     for bank in SHORT:
         want = f"{BRIDGE.loc[bank, 'pat_growth_yoy_pct']:+.1f}%".replace("+", "")
         assert want in text, f"memo does not quote {bank}'s current PAT growth of {want}"
+
+
+def test_icici_derived_nii_matches_independently_published_figure():
+    """The one derived figure in the panel, checked from outside its definition.
+
+    ICICI's regulatory filing prints no NII line, so NII is computed here as
+    interest earned less interest expended. Checking that against the filing
+    would be circular. ICICI's own Q1 FY26 investor presentation (p.7) does
+    print standalone NII, at Rs 216.35 bn, which is an independent figure the
+    derivation never touched.
+    """
+    row = INPUTS[(INPUTS["bank"] == "ICICI Bank") & (INPUTS["quarter"] == "Q1 FY26")].iloc[0]
+    derived = row["interest_income_cr"] - row["interest_expended_cr"]
+    assert derived == pytest.approx(row["nii_cr"], abs=0.01), "CSV NII is not the derivation"
+
+    published_cr = 216.35 * 100  # Rs bn printed to 2dp -> Rs Cr
+    gap = abs(derived - published_cr)
+    assert gap < 1.0, (
+        f"derived ICICI Q1 FY26 NII {derived:,.2f} Cr is {gap:,.2f} Cr from the "
+        f"{published_cr:,.0f} Cr printed in ICICI_Q1FY26_deck.pdf p.7"
+    )
+
+    # The documented gap must stay true in prose as well as in the data.
+    for doc in ("LIMITATIONS.md", "README.md"):
+        assert "216.35" in (ROOT / doc).read_text(), f"{doc} no longer cites the published figure"
+
+
+def test_icici_npa_uses_advances_denominator_not_customer_assets():
+    """ICICI prints two NPA ratios on two denominators. Only one is comparable.
+
+    Page 1 states GNPA against gross *customer assets* (advances plus credit
+    substitutes); footnote 1 on page 2 states it against gross *advances*.
+    The other three banks report on advances, so the footnote figures are the
+    comparable ones. Picking the page-1 ratios would understate ICICI.
+    """
+    rows = INPUTS[INPUTS["bank"] == "ICICI Bank"].set_index("quarter")
+    advances_based = {"Q1 FY26": (1.75, 0.44), "Q1 FY27": (1.42, 0.36)}
+    customer_asset_based = {"Q1 FY26": (1.67, 0.41), "Q1 FY27": (1.38, 0.35)}
+    for q, (gnpa, nnpa) in advances_based.items():
+        assert rows.loc[q, "gnpa_pct"] == pytest.approx(gnpa), f"{q} GNPA off the advances basis"
+        assert rows.loc[q, "net_npa_pct"] == pytest.approx(nnpa), f"{q} NNPA off the advances basis"
+        wrong_gnpa, _ = customer_asset_based[q]
+        assert rows.loc[q, "gnpa_pct"] != pytest.approx(wrong_gnpa), (
+            f"{q} GNPA is the customer-asset ratio, not the advances ratio"
+        )

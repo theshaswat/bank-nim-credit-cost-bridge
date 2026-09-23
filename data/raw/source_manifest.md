@@ -40,20 +40,31 @@ two sets of numbers never touch.
   Expended, NII, and PAT all as clean line items. `indfin.reconcile.nii`
   ties Interest Income − Interest Expended to reported NII for both
   quarters (see `data/processed/reconciliation_log.md`) — exact match.
-- **ICICI Bank**: the Q1FY26 deck (investor-presentation format, 59 pages)
-  and Q1FY27 deck (regulatory results-filing format, 13 pages) are
-  different document types from the same filer — a genuine format
-  difference between the two periods, documented rather than smoothed over.
-  Both carry a results table with Interest earned, Interest expended, Other
-  income, Operating expenses, Provisions, Tax and Net profit. Neither
-  prints a net interest income line: ICICI's NII is **derived** here as
-  interest earned less interest expended, flagged `nii_source = derived`,
-  and deliberately **excluded** from the `check_nii` tie-out, because
-  checking a derived figure against the definition it came from would pass
-  by construction. Both quarters of ICICI are used on a **standalone**
-  basis — the consolidated results on p.9 of the Q1FY27 filing include
-  large insurance subsidiaries and are not comparable with the other three
-  banks.
+- **ICICI Bank**: both quarters come from **one** file — page 1 of the
+  13-page Q1FY27 regulatory results filing, whose STANDALONE FINANCIAL
+  RESULTS table carries Q1-2027 and Q1-2026 columns side by side for
+  Interest earned, Other income, Interest expended, Operating expenses,
+  Provisions, Tax and Net profit. That filing prints no net interest
+  income line, so ICICI's NII is **derived** here as interest earned less
+  interest expended, flagged `nii_source = derived`, and deliberately
+  **excluded** from the `check_nii` tie-out, because checking a derived
+  figure against the definition it came from would pass by construction.
+  `ICICI_Q1FY26_deck.pdf` is retained for one reason: its page 7 profit &
+  loss statement does print standalone NII, at ₹216.35 bn for Q1-2026,
+  against ₹21,634.46 Cr derived here — ₹0.54 Cr apart, which corroborates
+  the derivation from outside its own definition. No Q1FY27 document with
+  a printed NII line was obtained, so that corroboration covers the prior
+  year only. Both quarters are used on a **standalone** basis — the
+  consolidated results on p.9 of the Q1FY27 filing include large insurance
+  subsidiaries and are not comparable with the other three banks.
+
+  ICICI's gross and net NPA ratios are taken from footnote 1 on page 2
+  (1.42% and 0.36% at 30-Jun-2026; 1.75% and 0.44% at 30-Jun-2025), which
+  states them against **gross and net advances**. The ratios printed in the
+  body of the table on page 1 (1.38% / 0.35% and 1.67% / 0.41%) are struck
+  against **customer assets** — advances plus credit substitutes — a wider
+  denominator the other three banks do not use. The advances-based footnote
+  figures are the comparable ones and are what this project uses.
 - **Kotak Mahindra Bank**: `KOTAKBANK_Q1FY26_deck.pdf` was downloaded but
   had a corrupted internal xref structure at the source (fails both
   pdfplumber's strict parser and a lenient pypdf re-parse past 26 of an
@@ -62,6 +73,29 @@ two sets of numbers never touch.
   Highlights" table (page 6) and balance sheet (page 8) already carry the
   Q1FY26 comparative column** alongside Q1FY27, so both quarters come from
   one verified file.
+
+## Second extraction pass
+
+The P&L components — other income, operating expenses and tax for all four
+banks, in both quarters — were extracted once, then re-extracted a second
+time independently, on 23 Sep 2026. The second pass located each table by
+**content signature** rather than by the page number recorded the first
+time, so a wrong page reference in the citation could not steer it back to
+the same place, and the raw page text was read in full before any comparison
+against `data/final/verified_inputs.csv` was made.
+
+All 48 P&L values across the four banks matched on the second read. Two
+corrections came out of the pass, both to documentation rather than data:
+the claim that ICICI's two quarters came from different document types was
+wrong, and the claim that no ICICI document prints an NII line was wrong.
+Both are fixed above and in `LIMITATIONS.md`.
+
+The pass also turned up each bank's own rounding disclosure — Axis states
+"Certain amounts in the tables above may not add-up due to rounding off" and
+HDFC states "Certain figures reported above will not add-up due to
+rounding" — which independently supports the tolerance design in
+`src/nim_bridge.py`, where the walk tolerance is derived from each bank's
+printed precision instead of chosen.
 
 ## Scope note
 

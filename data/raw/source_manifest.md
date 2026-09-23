@@ -1,7 +1,11 @@
 # Source Manifest — Bank NIM & Credit-Cost Bridge
 
-Every file in `data/raw/` is logged here on download: exact URL, retrieval
-timestamp, and a SHA-256 hash.
+Seven investor decks were read directly. They are not redistributed here: all
+seven are third-party copyrighted documents, and this repository's MIT licence
+covers its own code and analysis, not HDFC Bank's or ICICI's earnings
+presentation. Each is logged below on download with its exact URL, retrieval
+timestamp and SHA-256 hash, which is enough to obtain the same document and
+prove it is the same one.
 
 | File | Bank | Period | URL | Retrieved | SHA-256 |
 |---|---|---|---|---|---|
@@ -13,8 +17,22 @@ timestamp, and a SHA-256 hash.
 | investor_decks/ICICI_Q1FY27_deck.pdf | ICICI Bank | Q1 FY27 (qtr ended 30-Jun-2026) | https://www.icici.bank.in/content/dam/icicibank/india/managed-assets/docs/about-us/2027/financial-results-q1-2027.pdf | 2026-09-23T01:08 IST | `b95bef731a963323ad256416cf2cc473c3c2554f6c09e4a83744ee1a6a094e2a` |
 | investor_decks/KOTAKBANK_Q1FY27_deck.pdf | Kotak Mahindra Bank | Q1 FY27 (qtr ended 30-Jun-2026), contains Q1 FY26 comparatives | https://www.kotak.bank.in/content/dam/Kotak/investor-relation/Financial-Result/QuarterlyReport/FY-2027/q1/Investor-Presentation/Q1FY27-Investor-Presentation.pdf | 2026-09-23T01:08 IST | `31f8caa16841747e4baae6d3312044459eca5711cfccdb91098d9b6caec288ee` |
 
-All seven hashes re-verified against the files in `investor_decks/` at
-build time (`shasum -a 256`) — match, no drift since download.
+### Verifying you have the same documents
+
+Download the seven decks from the URLs above into `data/raw/investor_decks/`,
+then, from the repository root:
+
+```bash
+shasum -a 256 -c data/raw/SHA256SUMS
+```
+
+Seven `OK` lines means your copies are byte-identical to the ones every figure
+in `data/final/verified_inputs.csv` was read from.
+
+Nothing in `src/` opens a PDF. Extraction was done by hand against the printed
+page numbers recorded in the `source_page_note` column of
+`verified_inputs.csv`, and the pipeline starts from that CSV, so the decks are
+provenance for the numbers rather than an input the build consumes.
 
 `bank_stated_yoy.csv` sits alongside them in `data/raw/`. It is not a
 downloaded file: it records the year-on-year growth percentages each bank

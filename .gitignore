@@ -3,3 +3,10 @@ __pycache__/
 .pytest_cache/
 .venv/
 .DS_Store
+
+# The seven investor decks are not redistributed here -- they are third-party
+# copyrighted documents and this repository's MIT licence covers its own code
+# and analysis, not HDFC Bank's or ICICI's earnings presentation.
+# data/raw/source_manifest.md identifies each one by URL, retrieval time and
+# SHA-256, and data/raw/SHA256SUMS lets you prove your copy is the same file.
+data/raw/investor_decks/*.pdf

@@ -132,9 +132,9 @@ Results: [`data/processed/reconciliation_log.md`](data/processed/reconciliation_
 bank-nim-credit-cost-bridge/
 ├── data/
 │   ├── raw/
-│   │   ├── investor_decks/       # 7 real, unmodified source PDFs
 │   │   ├── bank_stated_yoy.csv   # growth % as each bank printed it (check 2)
-│   │   └── source_manifest.md    # URL, retrieval date, SHA-256 per file
+│   │   ├── source_manifest.md    # URL, retrieval date, SHA-256 per deck
+│   │   └── SHA256SUMS            # check your own copies against these
 │   ├── processed/
 │   │   └── reconciliation_log.md # all four checks, per bank, per quarter
 │   └── final/
@@ -184,7 +184,17 @@ both build on. No sibling checkout or path manipulation is needed.
 
 Q1 FY26 and Q1 FY27 investor presentations and results filings, downloaded
 from each bank's investor-relations page. URLs, retrieval timestamps and
-SHA-256 hashes for every file: [`data/raw/source_manifest.md`](data/raw/source_manifest.md).
+SHA-256 hashes for all seven: [`data/raw/source_manifest.md`](data/raw/source_manifest.md).
+
+The decks themselves are not in this repository. They are third-party
+copyrighted documents, and the MIT licence here covers this project's own code
+and analysis rather than HDFC Bank's or ICICI's earnings presentation. Nothing
+in `src/` opens a PDF in any case — the figures were transcribed by hand
+against the printed page numbers recorded in `verified_inputs.csv`, and every
+output rebuilds from that CSV. To check the transcription, download the seven
+decks from the URLs in the manifest into `data/raw/investor_decks/` and run
+`shasum -a 256 -c data/raw/SHA256SUMS` to confirm you have the same
+documents.
 
 One gap worth stating up front: Kotak's Q1 FY26 deck downloaded with a
 corrupted internal structure and was dropped rather than special-cased into

@@ -1,7 +1,10 @@
 pandas>=2.0
 matplotlib>=3.8
-openpyxl>=3.1
 reportlab>=4.0
+# src/build_pdf.py reads each chart's real pixel dimensions through Pillow so
+# the memo scales it by its own aspect ratio. reportlab pulls Pillow in anyway,
+# but the import is direct, so the dependency is declared directly.
+pillow>=10.0
 
 # The shared reconciliation library this project is built on. Installing it
 # from git is what makes `pip install -r requirements.txt` sufficient on a

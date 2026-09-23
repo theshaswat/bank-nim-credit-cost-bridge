@@ -23,8 +23,9 @@ repeatable.
 
 ## Findings
 
-Every bank's margin compressed. Every bank's profit grew. The line that
-reconciles those two facts is provisions.
+The margin narrowed at all three banks that publish one — ICICI does not —
+and profit grew at all four. The line that reconciles those two facts is
+provisions.
 
 **Where the profit growth came from** — each component's contribution in
 percentage points of the prior-year quarter's profit. They sum to reported

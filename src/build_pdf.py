@@ -6,6 +6,7 @@ from pathlib import Path
 
 import matplotlib
 import pandas as pd
+from PIL import Image as PILImage
 from reportlab import rl_config
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -31,6 +32,22 @@ mpl_fonts = Path(matplotlib.get_data_path()) / "fonts" / "ttf"
 pdfmetrics.registerFont(TTFont("DejaVuSans", str(mpl_fonts / "DejaVuSans.ttf")))
 pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", str(mpl_fonts / "DejaVuSans-Bold.ttf")))
 pdfmetrics.registerFont(TTFont("DejaVuSans-Oblique", str(mpl_fonts / "DejaVuSans-Oblique.ttf")))
+
+
+def chart(name: str, width_cm: float = 15.5) -> Image:
+    """Place a chart at its own aspect ratio.
+
+    The heights used to be written in by hand. matplotlib saves these with
+    bbox_inches="tight", so the saved width tracks the length of the longest
+    title line -- editing a subtitle silently changed the image's proportions
+    and the hand-set height then stretched or squashed it. Reading the real
+    dimensions removes that whole class of problem.
+    """
+    with PILImage.open(CHARTS / name) as im:
+        w_px, h_px = im.size
+    width = width_cm * cm
+    return Image(str(CHARTS / name), width=width, height=width * h_px / w_px)
+
 
 NAVY = colors.HexColor("#1a3a5c")
 GREY = colors.HexColor("#6b6b6b")
@@ -116,8 +133,9 @@ def build() -> None:
 
     story.append(P("What the numbers say", "h1"))
     story.append(P(
-        "Every bank\u2019s net interest margin compressed. Every bank\u2019s profit grew. The line "
-        "that reconciles those two facts is provisions.", "body"))
+        "The margin narrowed at all three banks that publish one \u2014 ICICI discloses no net "
+        "interest margin in this filing \u2014 and profit grew at all four. The line that "
+        "reconciles those two facts is provisions.", "body"))
 
     hdr = ["Bank", "Net interest income", "Other income", "Operating expenses",
            "Provisions", "Tax", "Reported PAT growth"]
@@ -148,7 +166,7 @@ def build() -> None:
         "least dependent on the credit cycle staying benign, and Axis\u2019s is the most.", "body"))
 
     story.append(KeepTogether([
-        Image(str(CHARTS / "01_profit_attribution.png"), width=15.5 * cm, height=9.3 * cm),
+        chart("01_profit_attribution.png"),
         P("Figure 1. The same decomposition. Bars stack above and below zero by sign; the black "
           "dash is each bank\u2019s reported PAT growth.", "caption"),
     ]))
@@ -179,9 +197,13 @@ def build() -> None:
         "prove nothing, so ICICI is flagged <font name='DejaVuSans-Oblique'>derived</font> and "
         "excluded from check 1. It is still covered by checks 3 and 4.", "body"))
 
-    story.append(P("Bank by bank", "h1"))
-
+    # The section heading goes inside the first KeepTogether rather than being
+    # appended before it. keepWithNext on its own does not hold a heading
+    # against a following KeepTogether block that is taller than the space
+    # left on the page: reportlab moves the block and strands the heading at
+    # the foot of the previous page, which is what it was doing here.
     story.append(KeepTogether([
+        P("Bank by bank", "h1"),
         P("Axis Bank \u2014 profit growth almost entirely from the provision line", "h2"),
         P(
             "NII grew 8.0% (interest income \u20b931,064 Cr \u2192 \u20b933,986 Cr, interest "
@@ -250,14 +272,14 @@ def build() -> None:
         "basis points than margins did at all three banks disclosing both.", "body"))
 
     story.append(KeepTogether([
-        Image(str(CHARTS / "02_margin_vs_credit_cost.png"), width=14.5 * cm, height=9.1 * cm),
+        chart("02_margin_vs_credit_cost.png", 14.5),
         P("Figure 2. NIM and credit-cost movement. Credit-cost <i>levels</i> are not comparable "
           "across banks \u2014 each defines the ratio differently \u2014 so only the change is "
           "plotted. ICICI publishes neither ratio and is omitted.", "caption"),
     ]))
 
     story.append(KeepTogether([
-        Image(str(CHARTS / "03_gnpa_levels.png"), width=15.5 * cm, height=8.1 * cm),
+        chart("03_gnpa_levels.png"),
         P("Figure 3. Gross NPA ratio at both dates. Gross throughout \u2014 net NPA is a different, "
           "lower series and is kept in a separate column.", "caption"),
     ]))

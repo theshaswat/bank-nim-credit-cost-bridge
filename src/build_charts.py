@@ -148,9 +148,14 @@ def chart_margin_vs_credit_cost(df: pd.DataFrame) -> None:
     ax.set_xticks(list(x))
     ax.set_xticklabels([_short(b) for b in d["bank"]])
     ax.set_ylabel("Change Q1 FY26 → Q1 FY27 (bps)")
+    # "every bank" would read as all four. Only the banks that publish both
+    # ratios are plotted, and the count comes from the data so the subtitle
+    # cannot drift from what is actually drawn.
+    n_words = {2: "Both", 3: "All three", 4: "All four"}.get(len(d), f"All {len(d)}")
     ax.set_title(
         "Margins compressed while credit costs fell further\n"
-        "Every bank's margin narrowed; every bank's credit cost fell by more basis points",
+        f"{n_words} banks that publish a NIM saw it narrow, and each one's "
+        "credit cost fell by more",
         fontsize=11, loc="left", weight="bold")
     ax.legend(fontsize=8.5, frameon=False, loc="lower left")
     ax.margins(y=0.22)

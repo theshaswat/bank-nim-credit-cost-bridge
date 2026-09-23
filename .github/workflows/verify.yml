@@ -1,0 +1,72 @@
+name: verify
+
+# The source PDFs are committed and hash-pinned in data/raw/source_manifest.md,
+# so CI can rebuild the whole thing from primary documents rather than trusting
+# what is checked in. Three things get checked, in order of how much they mean:
+#
+#   1. The reconciliation checks pass. src/nim_bridge.py exits non-zero and
+#      refuses to write the bridge if any of the four fails, so a broken
+#      extraction stops here rather than producing a plausible-looking bridge.
+#   2. The committed data artifacts reproduce byte for byte. The CSVs, the
+#      reconciliation log and the dashboard are plain text built from the CSVs,
+#      and nothing in them depends on the machine, so an exact diff is the right
+#      test. It catches a figure edited by hand without rerunning what produces it.
+#   3. The tests pass, including the ones that assert the README and the memo
+#      still quote the same numbers the CSVs hold.
+#
+# Charts and the PDF are rebuilt as a smoke test and deliberately not compared.
+# matplotlib renders text differently on Linux than on macOS, so the PNGs differ
+# between a correct local build and a correct CI build, and the memo embeds them.
+# The PDF is byte-reproducible for a given machine (rl_config.invariant), just
+# not across platforms.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Source PDFs still match their recorded hashes
+        run: |
+          cd data/raw/investor_decks
+          for f in *.pdf; do
+            want=$(grep -F "$f" ../source_manifest.md | grep -oE '[0-9a-f]{64}' | head -1)
+            got=$(sha256sum "$f" | cut -d' ' -f1)
+            if [ "$want" != "$got" ]; then
+              echo "::error::$f does not match the manifest"; echo "  manifest: $want"; echo "  on disk:  $got"; exit 1
+            fi
+            echo "ok  $f"
+          done
+
+      - name: Reconciliation checks pass and the bridge rebuilds
+        run: python src/nim_bridge.py
+
+      - name: Dashboard rebuilds
+        run: python src/build_dashboard.py
+
+      - name: Committed data artifacts reproduce exactly
+        run: git diff --exit-code -- data/final data/processed outputs/dashboard
+
+      - name: Tests
+        run: |
+          pip install pytest
+          pytest -q
+
+      - name: Charts and memo still build
+        run: |
+          python src/build_charts.py
+          python src/build_pdf.py
